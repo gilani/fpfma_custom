@@ -214,5 +214,7 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
-
+*.bak
+*.mti
+*.mpf
 
