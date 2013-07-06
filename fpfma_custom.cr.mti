@@ -1,4 +1,11 @@
-C:/Users/gilani/Documents/GitHub/fpfma_custom/fpSpecialCases.v {1 {vlog -work work C:/Users/gilani/Documents/GitHub/fpfma_custom/fpSpecialCases.v
+C:/Users/gilani/Documents/GitHub/fpfma_custom/significandMultiplier.v {1 {vlog -work work {C:\Users\gilani\Documents\GitHub\fpfma_custom\significandMultiplier.v}
+Model Technology ModelSim PE Student Edition vlog 10.2b Compiler 2013.05 May 17 2013
+-- Compiling module significandMultiplier
+
+Top level modules:
+	significandMultiplier
+
+} {} {}} C:/Users/gilani/Documents/GitHub/fpfma_custom/fpSpecialCases.v {1 {vlog -work work C:/Users/gilani/Documents/GitHub/fpfma_custom/fpSpecialCases.v
 Model Technology ModelSim PE Student Edition vlog 10.2b Compiler 2013.05 May 17 2013
 -- Compiling module fpSpecialCases
 
