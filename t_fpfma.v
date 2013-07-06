@@ -27,8 +27,9 @@ module t_fpfma();
   
   integer fd;
   initial begin
+    rnd=1;
     //fd=$fopen("sub_inputs.txt", "r");//fd=$fopen("testInputs.txt", "r");
-    fd=$fopen("testInputs.txt", "r");
+    fd=$fopen("sub_inputs.txt", "r");
     //op=0;
   end
   integer i;
@@ -45,7 +46,7 @@ module t_fpfma();
   end
  
  wire sig_compare = (UUT.renormalized!=x_man);
-  
+  wire res_compare = result!=x_ideal;
   /*
   initial begin
     A=32'h0x40400000;//3

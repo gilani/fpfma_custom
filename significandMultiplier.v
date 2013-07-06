@@ -1,7 +1,7 @@
 module significandMultiplier(aIn, bIn, sum, carry);
   `include "parameters.v"
   input [SIG_WIDTH:0] aIn,bIn;
-  output [2*SIG_WIDTH+3:0] sum, carry; //48-bit + 1 overflow bit + 1 sign bit
+  output [2*SIG_WIDTH+3:0] sum, carry; //49-bit + 1 sign bit
   
   //radix-2 Booth multiples generation
   wire [SIG_WIDTH+2:0] b, twob, minusb, minusTwob;
@@ -30,16 +30,7 @@ module significandMultiplier(aIn, bIn, sum, carry);
   endgenerate
   wire pp_carry_out = |pp_signs;
   
-  //Test wires
-  integer pp_sum, j;
-  always @(*) begin
-    pp_sum=recoded[0];
-    for(j=1;j<12;j=j+1) begin
-      pp_sum=$signed(recoded[j])*4*j+$signed(pp_sum);
-    end
-  end
-  wire [2*SIG_WIDTH+5:0] testProd = {{2{sum[2*SIG_WIDTH+3]}},sum} + {carry[2*SIG_WIDTH+3],carry,1'b0};
-  wire [2*SIG_WIDTH+4:0] testProdIdeal = aIn * bIn;  
+ 
   //CSA array to add partial products (Single Precision tree)
   wire [SIG_WIDTH+6:0] s_a, s_b, s_c, s_d, c_a, c_b, c_c, c_d;//30-bit
   wire [SIG_WIDTH+12:0] s_e, c_e, s_f, c_f;//36-bit
@@ -53,23 +44,6 @@ module significandMultiplier(aIn, bIn, sum, carry);
   
   //Stage 0 (each recoded word is 26-bit)
   //26-bit inputs 30-bit outputs
-  //Test wires
-  wire [29:0] comp_a_in1= {{4{recoded[0][SIG_WIDTH+1]}},recoded[0]};
-  wire [29:0] comp_a_in2= {{2{recoded[1][SIG_WIDTH+1]}},recoded[1],2'b0};
-  wire [29:0] comp_a_in3= {recoded[2],4'b0};
-  wire [49:0] stage0_sa = {{20{s_a[29]}},s_a};
-  wire [49:0] stage0_ca = {{19{c_a[29]}},c_a, 1'b0};
-  wire [49:0] stage0_sb = {{20{s_b[29]}},s_b}<<6;
-  wire [49:0] stage0_cb = {{19{c_b[29]}},c_b, 1'b0}<<6;
-  wire [49:0] stage0_sc = {{20{s_c[29]}},s_c}<<12;
-  wire [49:0] stage0_cc = {{19{c_c[29]}},c_c, 1'b0}<<12;
-  wire [49:0] stage0_sd = {{20{s_d[29]}},s_d}<<18;
-  wire [49:0] stage0_cd = {{19{c_d[29]}},c_d, 1'b0}<<18;
-  wire [49:0] stage0_sum = (s_d<<18) + (s_c<<12) + (s_b << 6)+ s_a;
-  wire [49:0] stage0_carry = (c_d<<18) + (c_c<<12) + (c_b << 6)+ c_a;
-  wire [49:0] stage0_result= stage0_sa + stage0_sb + stage0_sc + stage0_sd+
-                             stage0_ca + stage0_cb + stage0_cc + stage0_cd + ({24'b0,recoded[12]}<<24);
-  
   
   compressor_3_2_group #(.GRP_WIDTH(30)) comp_a({{4{recoded[0][SIG_WIDTH+2]}},recoded[0]}, 
                               {{2{recoded[1][SIG_WIDTH+2]}},recoded[1],2'b0}, 
@@ -89,21 +63,7 @@ module significandMultiplier(aIn, bIn, sum, carry);
                               
   //Stage 1 (sign-extend sum and carry vectors with to adjust for the increased bit-width)
   //30-bit inputs, 36-bit outputs
-  //Test wires
-  wire [35:0] e_in1 = {{6{s_a[SIG_WIDTH+6]}},s_a};
-  wire [35:0] e_in2 = {{5{c_a[SIG_WIDTH+6]}},{c_a,1'b0}}; 
-  wire [35:0] e_in3 = {s_b,6'b0};
-  wire [49:0] stage1_se = {{20{s_e[35]}},s_e};
-  wire [49:0] stage1_ce = {{19{c_e[35]}},c_e, 1'b0};
-  wire [49:0] stage1_sf = {{20{s_f[35]}},s_f}<<7;
-  
-  wire [49:0] stage1_cf = {{19{c_f[35]}},c_f, 1'b0}<<8;
-  wire [49:0] stage1_sg = {{20{s_g[29]}},s_g}<<18;
-  wire [49:0] stage1_cg = {{19{c_g[29]}},c_g, 1'b0}<<18;
-  wire [49:0] stage1_result = stage1_se + stage1_sf + stage1_sg+
-                             stage1_ce + stage1_cf + stage1_cg;
-  
-  
+ 
   //Stage-1 CSA inputs, extended
   wire [SIG_WIDTH+12:0] s_a_ext, c_a_ext, s_b_ext; //inputs to CSA e
   wire [SIG_WIDTH+12:0] s_c_ext, c_c_ext, c_b_ext; //inputs to CSA f
@@ -127,19 +87,9 @@ module significandMultiplier(aIn, bIn, sum, carry);
 
   compressor_3_2_group #(.GRP_WIDTH(32)) comp_g(c_d_ext, s_d_ext, pp12_ext, s_g, c_g);
 
-  //assign s_g = s_d;
-  //assign c_g = c_d;
   
   //Stage 2
   //36bit inputs, 43/41-bit outputs
-  //Test wires
-  wire [50:0] stage2_sh = {{8{s_h[42]}},s_h};
-  wire [50:0] stage2_ch = {{7{c_h[42]}},c_h, 1'b0};
-  wire [50:0] stage2_si = {{8{s_i[42]}},s_i}<<6;
-  wire [50:0] stage2_ci = {{7{c_i[42]}},c_i, 1'b0}<<6;
-
-  wire [49:0] stage2_result = stage2_sh + stage2_si+
-                             stage2_ch + stage2_ci ;
                                
   //Stage-2 CSA inputs, extended
   wire [SIG_WIDTH+19:0] s_e_ext, c_e_ext, s_f_ext; //inputs to CSA h (43-bit)
