@@ -65,8 +65,6 @@ module fpfma(A, B, C, rnd, clk, rst, result);
    assign sum = sum_custom; 
    assign carry = carry_custom;
    
-  wire [2*SIG_WIDTH+4:0] of_pro_prod = sum + (carry);
-   
   
   //****************************************************************************************************
   //************************CSA to combine product (sum, product and aligned C)
@@ -79,13 +77,9 @@ module fpfma(A, B, C, rnd, clk, rst, result);
   wire [2*(SIG_WIDTH+1)+1:0] C_mid = CAligned[2*(SIG_WIDTH+1)+3:2];// 49:0 -- 51:2 -- 50-bit
   wire [SIG_WIDTH+3:0] C_hi = CAligned[3*(SIG_WIDTH+1)+6:2*(SIG_WIDTH+1)+4];//[78:52] --27-bit , MSB is sign bit
   
-  
-  
-  wire [2*(SIG_WIDTH+1)+3:0] carry_wgt = {carry[2*SIG_WIDTH+3],carry,1'b0};//51-bit
-  
   wire [2*(SIG_WIDTH+1)+1:0] sum_add, carry_add;//CSA outputs -- 50-bit
   
-  wire [2*(SIG_WIDTH+1)+3:0] sum_se =(carry_wgt[2*(SIG_WIDTH+1)+2])?{{2{sum[2*(SIG_WIDTH+1)+1]}},sum }:{{2{sum[2*(SIG_WIDTH+1)+1]}},sum };//Concatenate MSB of sum (50-bit)
+
   
   compressor_3_2_group #(.GRP_WIDTH(50)) ADD(sum, carry, C_mid, sum_add, carry_add); /* 50-bit*/
   
@@ -112,7 +106,6 @@ module fpfma(A, B, C, rnd, clk, rst, result);
   
   wire [2*(SIG_WIDTH+1)+1-1:0] sum_small = {sum_add[2*(SIG_WIDTH+1)+1-1:0]};//49-bit
   wire [2*(SIG_WIDTH+1)+1-1:0] carry_small = {carry_add[2*(SIG_WIDTH+1)+1-2:0],1'b0};
-  wire [2*(SIG_WIDTH+1)+5:0] test_sum_eac = sum_add + carry_add_wgt;
   
   //*****************************************************************************************************
   //********************* Leading zero anticipator
